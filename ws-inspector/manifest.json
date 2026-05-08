@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "WS Inspector",
+  "version": "0.1.0",
+  "description": "Intercepts and displays WebSocket messages from iGaming app",
+  "permissions": ["scripting", "storage"],
+  "host_permissions": [
+    "*://097.stgame.win/*",
+    "*://b52.stgame.win/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://097.stgame.win/*", "*://b52.stgame.win/*"],
+      "js": ["config.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["*://097.stgame.win/*", "*://b52.stgame.win/*"],
+      "js": ["injector.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["*://097.stgame.win/*", "*://b52.stgame.win/*"],
+      "js": ["prism.min.js", "prism-json.min.js", "overlay.js"],
+      "css": ["overlay.css", "prism-theme.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [{
+    "resources": ["ws-interceptor.js"],
+    "matches": ["*://097.stgame.win/*", "*://b52.stgame.win/*"]
+  }]
+}

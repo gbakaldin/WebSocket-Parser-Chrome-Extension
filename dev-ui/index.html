@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WS Inspector — Dev UI</title>
+  <style>
+    body {
+      margin: 0;
+      background: #121212;
+      min-height: 100vh;
+      font-family: sans-serif;
+      color: #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    p { font-size: 14px; }
+  </style>
+
+  <!-- Prism (loaded before overlay.js so the global is available) -->
+  <script src="../ws-inspector/prism.min.js"></script>
+  <script src="../ws-inspector/prism-json.min.js"></script>
+
+  <!-- Overlay styles -->
+  <link rel="stylesheet" href="../ws-inspector/overlay.css">
+  <link rel="stylesheet" href="../ws-inspector/prism-theme.css">
+</head>
+<body>
+  <p>← Overlay renders at the bottom. Alt+W to toggle. Mock messages stream in automatically.</p>
+
+  <!-- The real overlay script (no chrome.* calls needed, builds its own DOM) -->
+  <script src="../ws-inspector/overlay.js"></script>
+
+  <!-- Fire mock messages via postMessage so overlay.js picks them up -->
+  <script src="mock-messages.js"></script>
+</body>
+</html>
