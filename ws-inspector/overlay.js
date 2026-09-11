@@ -7,7 +7,7 @@
   const tabs = new Map();    // url -> { filter }
   let activeTab = null;
   let selectedId = null;
-  const filter = { dir: 'all', cmd: '', text: '', hideHb: false, cmdRangeMode: false };
+  const filter = { dir: 'all', cmd: '', text: '', hideHb: false, cmdRangeMode: false, rx: false };
   let atBottom = true;
   let visible = true;
   let dockMode = 'right';    // 'top' | 'bottom' | 'left' | 'right' | 'float'
@@ -63,6 +63,7 @@
           <input id="wsi-cmd-input"  type="text" placeholder="CMD  e.g. 1,5,42" spellcheck="false" autocomplete="off">
           <button id="wsi-cmd-range-btn" title="Range mode: match A ≤ cmd &lt; B  (enter as  A, B)">↔</button>
           <input id="wsi-text-input" type="text" placeholder="Search…"           spellcheck="false" autocomplete="off">
+          <button id="wsi-rx-btn" title="Regex mode (JS RegExp, case-sensitive). Matches the raw wire JSON, which is compact — no space after a colon, so use \s* :  &quot;cmd&quot;:\s*14\d\d">.*</button>
           <label id="wsi-hb-label"><input id="wsi-hb-chk" type="checkbox"> Hide HB</label>
         </div>
         <div id="wsi-list"></div>
@@ -128,6 +129,13 @@
       const btn = $root.querySelector('#wsi-cmd-range-btn');
       btn.classList.toggle('active', filter.cmdRangeMode);
       $cmdInput.placeholder = filter.cmdRangeMode ? 'CMD range  e.g. 10, 50' : 'CMD  e.g. 1,5,42';
+      applyFilters();
+    });
+    $root.querySelector('#wsi-rx-btn').addEventListener('click', () => {
+      filter.rx = !filter.rx;
+      const btn = $root.querySelector('#wsi-rx-btn');
+      btn.classList.toggle('active', filter.rx);
+      $textInput.placeholder = filter.rx ? 'Search regex  e.g.  "cmd":\\s*14\\d\\d' : 'Search…';
       applyFilters();
     });
     $root.querySelector('#wsi-hb-chk').addEventListener('change', (e) => {
@@ -551,7 +559,7 @@
     row.addEventListener('click', () => selectMsg(record.id));
 
     const cmdFilter = parseCmdFilter(filter.cmd);
-    row.hidden = !rowVisible(row, record, cmdFilter);
+    row.hidden = !rowVisible(row, record, cmdFilter, buildTextMatcher().fn);
 
     $list.appendChild(row);
     if (atBottom && !row.hidden) scrollToBottom();
@@ -562,6 +570,34 @@
   }
 
   // ---- Filtering ----
+
+  // Cache of the last successfully built matcher: { src, rx, fn }.
+  // On an invalid pattern we fall back to this, so a half-typed regex leaves
+  // the current result set alone instead of blanking the list.
+  let matcherCache = null;
+
+  function buildTextMatcher() {
+    const src = filter.text;
+    if (!src) {
+      matcherCache = null;
+      return { fn: null, invalid: false };
+    }
+    if (matcherCache && matcherCache.src === src && matcherCache.rx === filter.rx) {
+      return { fn: matcherCache.fn, invalid: false };
+    }
+    if (filter.rx) {
+      let re;
+      try {
+        re = new RegExp(src);
+      } catch {
+        return { fn: matcherCache?.fn ?? null, invalid: true };
+      }
+      matcherCache = { src, rx: true, fn: (raw) => re.test(raw) };
+    } else {
+      matcherCache = { src, rx: false, fn: (raw) => raw.includes(src) };
+    }
+    return { fn: matcherCache.fn, invalid: false };
+  }
 
   function parseCmdFilter(raw) {
     if (!raw.trim()) return null;
@@ -594,7 +630,7 @@
     return false;
   }
 
-  function rowVisible(row, record, cmdFilter) {
+  function rowVisible(row, record, cmdFilter, textFn) {
     if (activeTab && row.dataset.url !== activeTab) return false;
     if (filter.dir !== 'all' && row.dataset.dir !== filter.dir) return false;
     if (cmdFilter) {
@@ -606,9 +642,9 @@
         if (cmd < cmdFilter.from || cmd >= cmdFilter.to) return false;
       }
     }
-    if (filter.text) {
+    if (textFn) {
       const r = record ?? msgMap.get(row.dataset.id);
-      if (!r || !r.raw.includes(filter.text)) return false;
+      if (!r || !textFn(r.raw)) return false;
     }
     if (filter.hideHb) {
       const r = record ?? msgMap.get(row.dataset.id);
@@ -622,9 +658,11 @@
     filter.cmd  = $cmdInput.value;
     filter.text = $textInput.value;
     if (activeTab) saveFilterToTab(activeTab);
+    const { fn: textFn, invalid } = buildTextMatcher();
+    $textInput.classList.toggle('wsi-invalid', invalid);
     const cmdFilter = parseCmdFilter(filter.cmd);
     for (const row of $list.querySelectorAll('.wsi-row')) {
-      row.hidden = !rowVisible(row, null, cmdFilter);
+      row.hidden = !rowVisible(row, null, cmdFilter, textFn);
     }
     if (atBottom) scrollToBottom();
   }

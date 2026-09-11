@@ -35,6 +35,15 @@ const TEMPLATES = [
   { url: WS_GAME, direction: 'server',
     parsed: { events: [{ type: 'update' }, { cmd: 88, value: 42 }] } },
 
+  // 4-digit cmds — exercises regex range patterns like  "cmd":\s*14\d\d
+  { url: WS_GAME, direction: 'server',
+    parsed: { cmd: 1401, event: 'round_start', roundId: 8821, betWindowMs: 15000 } },
+  { url: WS_GAME, direction: 'server',
+    parsed: { cmd: 1499, event: 'round_settle', roundId: 8821, payout: 240.75 } },
+  // just outside 14xx — should NOT match that pattern
+  { url: WS_GAME, direction: 'server',
+    parsed: { cmd: 1502, event: 'jackpot_tick', pool: 98210.40 } },
+
   // lobby connection — separate tab
   { url: WS_LOBBY, direction: 'server',
     parsed: { cmd: 100, games: ['slots', 'roulette', 'blackjack'], featured: 'slots' } },

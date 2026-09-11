@@ -212,13 +212,15 @@
 
 #wsi-dir-btn { min-width: 80px; text-align: center; }
 
-#wsi-cmd-range-btn {
+#wsi-cmd-range-btn,
+#wsi-rx-btn {
   padding: 2px 5px;
   font-size: 12px;
   min-width: unset;
 }
 
-#wsi-cmd-range-btn.active {
+#wsi-cmd-range-btn.active,
+#wsi-rx-btn.active {
   background: #0e639c;
   border-color: #4db8ff;
   color: #fff;
@@ -251,6 +253,10 @@
 #wsi-text-input { flex: 1; }
 
 #wsi-root input[type="text"]:focus { border-color: #007acc; }
+
+/* Invalid regex pattern — filter keeps its last valid result set. */
+#wsi-root input[type="text"].wsi-invalid,
+#wsi-root input[type="text"].wsi-invalid:focus { border-color: #f14c4c; }
 
 /* Message list */
 #wsi-list {
