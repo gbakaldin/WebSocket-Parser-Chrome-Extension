@@ -1,0 +1,1 @@
+Read installation and usage guide here: https://sgame.atlassian.net/wiki/spaces/BL/pages/4120084681/WebSocket+Parser+Chrome+Extension?xpis=eyJicmlkZ2UiOiJxdWlja0ZpbmQiLCJpZCI6IjE3ODg3ODQzNTgyMjciLCJzb3VyY2UiOiJjb25mbHVlbmNlIn0%3D
